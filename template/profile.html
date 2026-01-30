@@ -1,0 +1,467 @@
+{% extends "base.html" %}
+
+{% block title %}โปรไฟล์ - StayHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        color: #ffffff;
+        border-radius: 16px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        background: #ffffff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        position: relative;
+        z-index: 1;
+    }
+
+    .profile-avatar i {
+        font-size: 4rem;
+        color: var(--secondary-color);
+    }
+
+    .profile-header h2 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .profile-header p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .info-card {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-card-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-card-title i {
+        color: var(--secondary-color);
+    }
+
+    .info-table {
+        width: 100%;
+    }
+
+    .info-table tr {
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .info-table tr:last-child {
+        border-bottom: none;
+    }
+
+    .info-table td {
+        padding: 1rem 0;
+        vertical-align: middle;
+    }
+
+    .info-table td:first-child {
+        font-weight: 600;
+        color: var(--text-dark);
+        width: 35%;
+    }
+
+    .info-table td:last-child {
+        color: var(--text-light);
+    }
+
+    .info-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-label i {
+        color: var(--secondary-color);
+        font-size: 1.1rem;
+    }
+
+    .sensitive-data {
+        background-color: #fff5f5;
+        border: 1px solid #fed7d7;
+        border-radius: 8px;
+        padding: 0.8rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
+    .sensitive-data i {
+        color: var(--danger-color);
+        font-size: 1.2rem;
+    }
+
+    .sensitive-data-text {
+        flex: 1;
+    }
+
+    .secret-note-box {
+        background-color: #fffaf0;
+        border: 2px solid var(--secondary-color);
+        border-radius: 10px;
+        padding: 1rem 1.2rem;
+    }
+
+    .secret-note-box strong {
+        color: var(--text-dark);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .secret-note-box strong i {
+        color: var(--secondary-color);
+    }
+
+    .secret-note-content {
+        background-color: #ffffff;
+        border: 1px dashed var(--secondary-color);
+        border-radius: 8px;
+        padding: 0.8rem;
+        font-family: 'Courier New', monospace;
+        color: #744210;
+        font-size: 0.9rem;
+    }
+
+    .badge-verified {
+        background-color: rgba(56, 161, 105, 0.1);
+        color: var(--success-color);
+        padding: 0.4rem 0.8rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .badge-role {
+        padding: 0.4rem 1rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: inline-block;
+    }
+
+    .badge-user {
+        background-color: rgba(26, 54, 93, 0.1);
+        color: var(--primary-color);
+    }
+
+    .badge-admin {
+        background: linear-gradient(135deg, #c53030, #e53e3e);
+        color: #ffffff;
+    }
+
+    .security-notice {
+        background-color: #fffaf0;
+        border-left: 4px solid var(--secondary-color);
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        margin-top: 1.5rem;
+    }
+
+    .security-notice strong {
+        color: #744210;
+        display: block;
+        margin-bottom: 0.3rem;
+    }
+
+    .security-notice p {
+        margin: 0;
+        color: #744210;
+        font-size: 0.9rem;
+    }
+
+    .edit-profile-btn {
+        margin-top: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if profile %}
+<div class="profile-header">
+    <div class="profile-avatar">
+        <i class="fas fa-user-circle"></i>
+    </div>
+    <h2>{{ profile.full_name }}</h2>
+    <p>@{{ profile.username }}</p>
+    {% if profile.role == 'admin' %}
+    <div class="mt-2">
+        <span class="badge-role badge-admin">
+            <i class="fas fa-crown me-1"></i>ผู้ดูแลระบบ
+        </span>
+    </div>
+    {% else %}
+    <div class="mt-2">
+        <span class="badge-role badge-user">
+            <i class="fas fa-user me-1"></i>สมาชิกทั่วไป
+        </span>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row">
+    <!-- Basic Information -->
+    <div class="col-md-6 mb-4">
+        <div class="info-card">
+            <div class="info-card-title">
+                <i class="fas fa-id-card"></i>
+                ข้อมูลพื้นฐาน
+            </div>
+            
+            <table class="info-table">
+                <tr>
+                    <td>
+                        <div class="info-label">
+                            <i class="fas fa-user"></i>
+                            ชื่อผู้ใช้
+                        </div>
+                    </td>
+                    <td>
+                        {{ profile.username }}
+                        <span class="badge-verified ms-2">
+                            <i class="fas fa-check-circle"></i>ยืนยันแล้ว
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="info-label">
+                            <i class="fas fa-envelope"></i>
+                            อีเมล
+                        </div>
+                    </td>
+                    <td>{{ profile.email }}</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="info-label">
+                            <i class="fas fa-id-badge"></i>
+                            ชื่อ-นามสกุล
+                        </div>
+                    </td>
+                    <td>{{ profile.full_name }}</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="info-label">
+                            <i class="fas fa-shield-alt"></i>
+                            บทบาท
+                        </div>
+                    </td>
+                    <td>
+                        {% if profile.role == 'admin' %}
+                            <span class="badge-role badge-admin" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
+                                <i class="fas fa-crown me-1"></i>ผู้ดูแลระบบ
+                            </span>
+                        {% else %}
+                            <span class="badge-role badge-user" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">
+                                <i class="fas fa-user me-1"></i>สมาชิกทั่วไป
+                            </span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+
+            <div class="edit-profile-btn">
+                <button class="btn btn-outline-primary w-100">
+                    <i class="fas fa-edit me-2"></i>แก้ไขข้อมูลพื้นฐาน
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personal Information -->
+    <div class="col-md-6 mb-4">
+        <div class="info-card">
+            <div class="info-card-title">
+                <i class="fas fa-lock"></i>
+                ข้อมูลส่วนตัว
+            </div>
+            
+            {% if profile.phone or profile.address %}
+            <table class="info-table">
+                {% if profile.phone %}
+                <tr>
+                    <td>
+                        <div class="info-label">
+                            <i class="fas fa-phone"></i>
+                            เบอร์โทรศัพท์
+                        </div>
+                    </td>
+                    <td>{{ profile.phone }}</td>
+                </tr>
+                {% endif %}
+                
+                {% if profile.address %}
+                <tr>
+                    <td>
+                        <div class="info-label">
+                            <i class="fas fa-map-marker-alt"></i>
+                            ที่อยู่
+                        </div>
+                    </td>
+                    <td>{{ profile.address }}</td>
+                </tr>
+                {% endif %}
+                
+                {% if profile.credit_card %}
+                <tr>
+                    <td colspan="2">
+                        <div class="sensitive-data">
+                            <i class="fas fa-credit-card"></i>
+                            <div class="sensitive-data-text">
+                                <strong style="margin-bottom: 0.2rem; display: block;">บัตรเครดิต</strong>
+                                <span style="font-family: 'Courier New', monospace; font-size: 0.95rem;">
+                                    {{ profile.credit_card }}
+                                </span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+                
+                {% if profile.secret_note %}
+                <tr>
+                    <td colspan="2">
+                        <div class="secret-note-box">
+                            <strong>
+                                <i class="fas fa-key"></i>
+                                บันทึกส่วนตัว
+                            </strong>
+                            <div class="secret-note-content">
+                                {{ profile.secret_note }}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+            </table>
+            {% else %}
+            <div class="alert alert-info mb-0">
+                <i class="fas fa-info-circle me-2"></i>
+                ยังไม่มีข้อมูลส่วนตัวเพิ่มเติม
+            </div>
+            {% endif %}
+
+            <div class="edit-profile-btn">
+                <button class="btn btn-outline-primary w-100">
+                    <i class="fas fa-edit me-2"></i>แก้ไขข้อมูลส่วนตัว
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Membership Information -->
+<div class="row">
+    <div class="col-12">
+        <div class="info-card">
+            <div class="info-card-title">
+                <i class="fas fa-star"></i>
+                สมาชิกภาพและสิทธิพิเศษ
+            </div>
+            
+            <div class="row text-center">
+                <div class="col-md-3 mb-3">
+                    <div style="background-color: var(--bg-light); padding: 1.5rem; border-radius: 10px;">
+                        <i class="fas fa-calendar-check" style="font-size: 2rem; color: var(--primary-color); margin-bottom: 0.8rem;"></i>
+                        <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-dark);">3</div>
+                        <div style="font-size: 0.9rem; color: var(--text-light);">การจองทั้งหมด</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div style="background-color: var(--bg-light); padding: 1.5rem; border-radius: 10px;">
+                        <i class="fas fa-star" style="font-size: 2rem; color: var(--secondary-color); margin-bottom: 0.8rem;"></i>
+                        <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-dark);">1,250</div>
+                        <div style="font-size: 0.9rem; color: var(--text-light);">แต้มสะสม</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div style="background-color: var(--bg-light); padding: 1.5rem; border-radius: 10px;">
+                        <i class="fas fa-heart" style="font-size: 2rem; color: var(--danger-color); margin-bottom: 0.8rem;"></i>
+                        <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-dark);">5</div>
+                        <div style="font-size: 0.9rem; color: var(--text-light);">โรงแรมที่ชื่นชอบ</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div style="background-color: var(--bg-light); padding: 1.5rem; border-radius: 10px;">
+                        <i class="fas fa-trophy" style="font-size: 2rem; color: var(--success-color); margin-bottom: 0.8rem;"></i>
+                        <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-dark);">Silver</div>
+                        <div style="font-size: 0.9rem; color: var(--text-light);">ระดับสมาชิก</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="security-notice">
+    <strong>
+        <i class="fas fa-shield-alt me-2"></i>ข้อมูลของคุณได้รับการปกป้อง
+    </strong>
+    <p>
+        ข้อมูลส่วนตัวและข้อมูลการชำระเงินของคุณได้รับการเข้ารหัสและปกป้องด้วยมาตรฐานความปลอดภัยระดับสากล
+    </p>
+</div>
+
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-exclamation-triangle" style="font-size: 4rem; color: var(--danger-color); margin-bottom: 1rem;"></i>
+        <h4 style="color: var(--text-dark);">ไม่พบข้อมูลโปรไฟล์</h4>
+        <p style="color: var(--text-light);">ไม่สามารถโหลดข้อมูลโปรไฟล์ของคุณได้</p>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary mt-3">
+            <i class="fas fa-home me-2"></i>กลับหน้าหลัก
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

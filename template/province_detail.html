@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}{{ province.name_th }} - StayHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .province-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        color: #ffffff;
+        border-radius: 16px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .province-header h2 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .hotel-card {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        margin-bottom: 1.5rem;
+    }
+
+    .hotel-card:hover {
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        transform: translateY(-4px);
+    }
+
+    .hotel-image {
+        width: 100%;
+        height: 250px;
+        background: linear-gradient(135deg, #e2e8f0, #cbd5e0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        color: #a0aec0;
+    }
+
+    .hotel-body {
+        padding: 1.5rem;
+    }
+
+    .hotel-name {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.8rem;
+    }
+
+    .hotel-description {
+        color: var(--text-light);
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    .hotel-info-row {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
+    .hotel-info-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-light);
+        font-size: 0.9rem;
+    }
+
+    .hotel-info-item i {
+        color: var(--secondary-color);
+    }
+
+    .hotel-price {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .price-label {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .price-unit {
+        font-size: 0.9rem;
+        color: var(--text-light);
+        font-weight: 400;
+    }
+
+    .btn-book {
+        background: linear-gradient(135deg, var(--secondary-color), #f6e05e);
+        border: none;
+        color: var(--text-dark);
+        padding: 0.7rem 1.5rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-book:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+        color: var(--text-dark);
+    }
+
+    .amenities-list {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
+    .amenity-badge {
+        background-color: var(--bg-light);
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        color: var(--text-dark);
+        border: 1px solid var(--border-color);
+    }
+
+    .star-rating {
+        color: #f6ad55;
+        font-size: 1.1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="province-header">
+    <h2>
+        <i class="fas fa-map-marker-alt me-2"></i>
+        {{ province.name_th }}
+    </h2>
+    <p style="font-size: 1.1rem;">{{ province.description }}</p>
+</div>
+
+<div class="mb-4">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+        <i class="fas fa-arrow-left me-2"></i>กลับหน้าหลัก
+    </a>
+</div>
+
+{% if hotels %}
+<div class="row">
+    {% for hotel in hotels %}
+    <div class="col-md-6 col-lg-4">
+        <div class="hotel-card">
+            <div class="hotel-image">
+                <i class="fas fa-hotel"></i>
+            </div>
+            <div class="hotel-body">
+                <div class="hotel-name">{{ hotel[1] }}</div>
+                
+                <div class="star-rating mb-2">
+                    {% for i in range(hotel[5]) %}
+                        <i class="fas fa-star"></i>
+                    {% endfor %}
+                    {% for i in range(5 - hotel[5]) %}
+                        <i class="far fa-star"></i>
+                    {% endfor %}
+                </div>
+
+                <div class="hotel-description">
+                    {{ hotel[2][:100] }}{% if hotel[2]|length > 100 %}...{% endif %}
+                </div>
+
+                <div class="hotel-info-row">
+                    <div class="hotel-info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>{{ hotel[3][:30] }}...</span>
+                    </div>
+                </div>
+
+                {% if hotel[6] %}
+                <div class="amenities-list">
+                    {% for amenity in hotel[6][:3] %}
+                        <span class="amenity-badge">
+                            <i class="fas fa-check me-1"></i>{{ amenity }}
+                        </span>
+                    {% endfor %}
+                    {% if hotel[6]|length > 3 %}
+                        <span class="amenity-badge">+{{ hotel[6]|length - 3 }} อื่นๆ</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div class="hotel-price">
+                    <div>
+                        <span class="price-label">฿{{ "{:,.0f}".format(hotel[4]) }}</span>
+                        <span class="price-unit">/คืน</span>
+                    </div>
+                    <a href="{{ url_for('hotel_detail', hotel_id=hotel[0]) }}" class="btn btn-book">
+                        <i class="fas fa-eye me-2"></i>ดูรายละเอียด
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-hotel" style="font-size: 4rem; color: var(--border-color); margin-bottom: 1rem;"></i>
+        <h4 class="mb-3">ไม่พบโรงแรมในจังหวัดนี้</h4>
+        <p class="text-muted">กรุณาลองเลือกจังหวัดอื่น</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

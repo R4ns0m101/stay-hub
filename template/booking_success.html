@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}จองสำเร็จ - StayHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .success-container {
+        max-width: 700px;
+        margin: 3rem auto;
+        text-align: center;
+    }
+
+    .success-icon {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, var(--success-color), #48bb78);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        animation: scaleIn 0.5s ease-out;
+    }
+
+    .success-icon i {
+        color: #ffffff;
+        font-size: 4rem;
+    }
+
+    @keyframes scaleIn {
+        from {
+            transform: scale(0);
+        }
+        to {
+            transform: scale(1);
+        }
+    }
+
+    .success-title {
+        font-size: 2.5rem;
+        color: var(--text-dark);
+        margin-bottom: 1rem;
+    }
+
+    .success-message {
+        font-size: 1.1rem;
+        color: var(--text-light);
+        margin-bottom: 3rem;
+    }
+
+    .booking-details {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: left;
+        margin-bottom: 2rem;
+    }
+
+    .booking-details-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 1.5rem;
+        text-align: center;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--secondary-color);
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        font-weight: 500;
+        color: var(--text-light);
+    }
+
+    .detail-value {
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    .booking-id {
+        background: linear-gradient(135deg, var(--secondary-color), #f6e05e);
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-primary-action {
+        padding: 0.9rem 2rem;
+        font-size: 1.05rem;
+        font-weight: 600;
+        border-radius: 10px;
+    }
+
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .status-pending {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-confirmed {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="success-container">
+    <div class="success-icon">
+        <i class="fas fa-check"></i>
+    </div>
+
+    <h1 class="success-title">จองสำเร็จ!</h1>
+    <p class="success-message">
+        ขอบคุณที่เลือกใช้บริการ StayHub<br>
+        การจองของคุณได้รับการยืนยันเรียบร้อยแล้ว
+    </p>
+
+    <div class="booking-id">
+        <i class="fas fa-ticket-alt me-2"></i>
+        หมายเลขการจอง: <span style="color: var(--primary-color);">#{{ booking[0] }}</span>
+    </div>
+
+    <div class="booking-details">
+        <h3 class="booking-details-title">
+            <i class="fas fa-file-invoice me-2"></i>รายละเอียดการจอง
+        </h3>
+        
+        <div class="detail-row">
+            <span class="detail-label">
+                <i class="fas fa-hotel me-2"></i>โรงแรม
+            </span>
+            <span class="detail-value">{{ booking[1] }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">
+                <i class="fas fa-calendar-check me-2"></i>เช็คอิน
+            </span>
+            <span class="detail-value">{{ booking[2].strftime('%d/%m/%Y') }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">
+                <i class="fas fa-calendar-times me-2"></i>เช็คเอาท์
+            </span>
+            <span class="detail-value">{{ booking[3].strftime('%d/%m/%Y') }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">
+                <i class="fas fa-users me-2"></i>จำนวนผู้เข้าพัก
+            </span>
+            <span class="detail-value">{{ booking[4] }} คน</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">
+                <i class="fas fa-money-bill-wave me-2"></i>ราคารวม
+            </span>
+            <span class="detail-value" style="font-size: 1.3rem; color: var(--secondary-color);">
+                ฿{{ "{:,.2f}".format(booking[5]) }}
+            </span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">
+                <i class="fas fa-info-circle me-2"></i>สถานะ
+            </span>
+            <span class="detail-value">
+                {% if booking[6] == 'pending' %}
+                    <span class="status-badge status-pending">รอการยืนยัน</span>
+                {% elif booking[6] == 'confirmed' %}
+                    <span class="status-badge status-confirmed">ยืนยันแล้ว</span>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <div class="alert alert-info" style="text-align: left;">
+        <h6><i class="fas fa-envelope me-2"></i>อีเมลยืนยัน</h6>
+        <p style="margin: 0; font-size: 0.95rem;">
+            เราได้ส่งอีเมลยืนยันการจองไปยังที่อยู่ของคุณแล้ว กรุณาตรวจสอบอีเมลของคุณเพื่อดูรายละเอียดเพิ่มเติม
+        </p>
+    </div>
+
+    <div class="action-buttons">
+        <a href="{{ url_for('profile') }}" class="btn btn-primary btn-primary-action">
+            <i class="fas fa-list me-2"></i>ดูการจองของฉัน
+        </a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary btn-primary-action">
+            <i class="fas fa-home me-2"></i>กลับหน้าหลัก
+        </a>
+    </div>
+
+    <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+        <p style="color: var(--text-light); font-size: 0.9rem;">
+            <i class="fas fa-phone me-2"></i>
+            หากมีคำถามเพิ่มเติม โทร 02-123-4567 หรืออีเมล support@stayhub.com
+        </p>
+    </div>
+</div>
+{% endblock %}

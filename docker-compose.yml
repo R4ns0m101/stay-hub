@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15
+    container_name: stayhub_db
+    environment:
+      POSTGRES_DB: security_lab
+      POSTGRES_USER: dbadmin
+      POSTGRES_PASSWORD: SecurePass2024!
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - stayhub_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dbadmin -d security_lab"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Flask Web Application
+  web:
+    build: .
+    container_name: stayhub_web
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=security_lab
+      - DB_USER=dbadmin
+      - DB_PASSWORD=SecurePass2024!
+      - SECRET_KEY=very-secret-key-for-session-2024
+      - FLASK_ENV=development
+    volumes:
+      - ./app.py:/app/app.py
+      - ./templates:/app/templates
+      - ./static:/app/static
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - stayhub_network
+    command: python app.py
+
+networks:
+  stayhub_network:
+    driver: bridge
+
+volumes:
+  postgres_data:

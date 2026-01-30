@@ -1,0 +1,527 @@
+{% extends "base.html" %}
+
+{% block title %}จัดการระบบ - StayHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #c53030, #e53e3e);
+        color: #ffffff;
+        border-radius: 16px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .admin-header::before {
+        content: '';
+        position: absolute;
+        top: -30%;
+        right: -5%;
+        width: 250px;
+        height: 250px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+    }
+
+    .admin-header h2 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .admin-header p {
+        margin: 0;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+    }
+
+    .admin-stat-card {
+        background: #ffffff;
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .admin-stat-card:hover {
+        border-color: var(--secondary-color);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+
+    .admin-stat-icon {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto 1rem;
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        color: #ffffff;
+    }
+
+    .admin-stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 0.3rem;
+    }
+
+    .admin-stat-label {
+        font-size: 0.9rem;
+        color: var(--text-light);
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-title i {
+        color: var(--secondary-color);
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .data-table thead {
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        color: #ffffff;
+    }
+
+    .data-table thead th {
+        padding: 1rem;
+        font-weight: 600;
+        text-align: left;
+        font-size: 0.9rem;
+    }
+
+    .data-table thead th:first-child {
+        border-radius: 10px 0 0 0;
+    }
+
+    .data-table thead th:last-child {
+        border-radius: 0 10px 0 0;
+    }
+
+    .data-table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle;
+    }
+
+    .data-table tbody tr:hover {
+        background-color: var(--bg-light);
+    }
+
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .session-token-cell {
+        font-family: 'Courier New', monospace;
+        font-size: 0.75rem;
+        background-color: #f7fafc;
+        padding: 0.5rem 0.8rem;
+        border-radius: 6px;
+        color: var(--primary-color);
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        border: 1px solid var(--border-color);
+    }
+
+    .badge-role {
+        padding: 0.4rem 0.8rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        display: inline-block;
+    }
+
+    .badge-admin {
+        background: linear-gradient(135deg, #c53030, #e53e3e);
+        color: #ffffff;
+    }
+
+    .badge-user {
+        background-color: rgba(26, 54, 93, 0.1);
+        color: var(--primary-color);
+    }
+
+    .badge-staff {
+        background-color: rgba(212, 175, 55, 0.1);
+        color: #744210;
+    }
+
+    .badge-active {
+        background-color: rgba(56, 161, 105, 0.1);
+        color: var(--success-color);
+        padding: 0.3rem 0.7rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .copy-btn {
+        background: none;
+        border: 1px solid var(--border-color);
+        padding: 0.3rem 0.6rem;
+        border-radius: 6px;
+        cursor: pointer;
+        color: var(--text-light);
+        transition: all 0.3s ease;
+        font-size: 0.8rem;
+    }
+
+    .copy-btn:hover {
+        background-color: var(--secondary-color);
+        border-color: var(--secondary-color);
+        color: #ffffff;
+    }
+
+    .alert-admin {
+        background-color: #fff5f5;
+        border-left: 4px solid var(--danger-color);
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+
+    .alert-admin strong {
+        color: var(--danger-color);
+    }
+
+    .alert-admin p {
+        margin: 0.3rem 0 0 0;
+        color: #742a2a;
+    }
+
+    .table-container {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--text-light);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: var(--border-color);
+    }
+
+    .ip-address {
+        font-family: 'Courier New', monospace;
+        font-size: 0.85rem;
+        color: var(--text-light);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <h2>
+        <i class="fas fa-cog me-2"></i>
+        แผงควบคุมระบบ
+    </h2>
+    <p>จัดการผู้ใช้งาน เซสชัน และข้อมูลระบบ StayHub</p>
+</div>
+
+<div class="alert-admin">
+    <i class="fas fa-shield-alt me-2"></i>
+    <strong>คำเตือน:</strong>
+    <p>คุณกำลังเข้าถึงข้อมูลที่มีความอันตราย โปรดใช้สิทธิ์ผู้ดูแลระบบอย่างระมัดระวัง</p>
+</div>
+
+<!-- Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="admin-stat-card">
+            <div class="admin-stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="admin-stat-value">{{ users|length }}</div>
+            <div class="admin-stat-label">ผู้ใช้ทั้งหมด</div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="admin-stat-card">
+            <div class="admin-stat-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="admin-stat-value">{{ sessions|length }}</div>
+            <div class="admin-stat-label">เซสชันที่ Active</div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="admin-stat-card">
+            <div class="admin-stat-icon">
+                <i class="fas fa-hotel"></i>
+            </div>
+            <div class="admin-stat-value">234</div>
+            <div class="admin-stat-label">โรงแรมในระบบ</div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="admin-stat-card">
+            <div class="admin-stat-icon">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="admin-stat-value">89</div>
+            <div class="admin-stat-label">การจองวันนี้</div>
+        </div>
+    </div>
+</div>
+
+<!-- Users List -->
+<div class="section-header">
+    <h3 class="section-title">
+        <i class="fas fa-users"></i>
+        รายชื่อผู้ใช้งาน
+    </h3>
+    <button class="btn btn-outline-primary btn-sm">
+        <i class="fas fa-plus me-2"></i>เพิ่มผู้ใช้
+    </button>
+</div>
+
+<div class="table-container">
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>ชื่อผู้ใช้</th>
+                    <th>อีเมล</th>
+                    <th>ชื่อ-นามสกุล</th>
+                    <th>บทบาท</th>
+                    <th>สร้างเมื่อ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td><strong>#{{ user[0] }}</strong></td>
+                    <td>
+                        <i class="fas fa-user-circle me-2" style="color: var(--secondary-color);"></i>
+                        {{ user[1] }}
+                    </td>
+                    <td>{{ user[2] }}</td>
+                    <td>{{ user[3] }}</td>
+                    <td>
+                        {% if user[4] == 'admin' %}
+                            <span class="badge-role badge-admin">
+                                <i class="fas fa-crown me-1"></i>Admin
+                            </span>
+                        {% elif user[4] == 'staff' %}
+                            <span class="badge-role badge-staff">
+                                <i class="fas fa-user-tie me-1"></i>Staff
+                            </span>
+                        {% else %}
+                            <span class="badge-role badge-user">
+                                <i class="fas fa-user me-1"></i>User
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td style="color: var(--text-light); font-size: 0.9rem;">
+                        {{ user[5].strftime('%d/%m/%Y %H:%M') if user[5] else 'N/A' }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Active Sessions -->
+<div class="section-header">
+    <h3 class="section-title">
+        <i class="fas fa-shield-alt"></i>
+        เซสชันที่ Active
+    </h3>
+    <span class="badge bg-success" style="padding: 0.5rem 1rem;">
+        <i class="fas fa-circle me-2" style="font-size: 0.6rem;"></i>
+        {{ sessions|length }} เซสชัน
+    </span>
+</div>
+
+<div class="alert alert-warning">
+    <div class="d-flex align-items-start">
+        <i class="fas fa-info-circle me-3" style="font-size: 1.5rem;"></i>
+        <div>
+            <strong>ข้อมูล Session Token</strong>
+            <p class="mb-0 mt-1">ตารางนี้แสดง Session Token ของผู้ใช้ที่ล็อกอินอยู่ในระบบ ใช้สำหรับการยืนยันตัวตนและจัดการเซสชัน</p>
+        </div>
+    </div>
+</div>
+
+<div class="table-container">
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Session ID</th>
+                    <th>ผู้ใช้</th>
+                    <th>Session Token</th>
+                    <th>สร้างเมื่อ</th>
+                    <th>หมดอายุ</th>
+                    <th>IP Address</th>
+                    <th>สถานะ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for session in sessions %}
+                <tr>
+                    <td><strong>#{{ session[0] }}</strong></td>
+                    <td>
+                        <i class="fas fa-user-circle me-2" style="color: var(--secondary-color);"></i>
+                        {{ session[1] }}
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <code class="session-token-cell" id="token-{{ session[0] }}">
+                                {{ session[2] }}
+                            </code>
+                            <button class="copy-btn" onclick="copyToken('{{ session[2] }}', {{ session[0] }})">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td style="color: var(--text-light); font-size: 0.85rem;">
+                        {{ session[3].strftime('%d/%m/%Y %H:%M') if session[3] else 'N/A' }}
+                    </td>
+                    <td style="color: var(--text-light); font-size: 0.85rem;">
+                        {{ session[4].strftime('%d/%m/%Y %H:%M') if session[4] else 'N/A' }}
+                    </td>
+                    <td>
+                        <span class="ip-address">{{ session[5] }}</span>
+                    </td>
+                    <td>
+                        <span class="badge-active">
+                            <i class="fas fa-check-circle me-1"></i>Active
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- System Information -->
+<div class="section-header">
+    <h3 class="section-title">
+        <i class="fas fa-database"></i>
+        ข้อมูลระบบ
+    </h3>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 style="color: var(--text-dark); margin-bottom: 1rem;">
+                    <i class="fas fa-table me-2" style="color: var(--secondary-color);"></i>
+                    ตารางในฐานข้อมูล
+                </h6>
+                <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-light); font-size: 0.9rem;">
+                    <li>users - {{ users|length }} records</li>
+                    <li>user_profiles - มีข้อมูลอันตราย</li>
+                    <li>hotels - 234 records</li>
+                    <li>bookings - 89 records</li>
+                    <li>sessions - {{ sessions|length }} records</li>
+                    <li>reviews - 156 records</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 style="color: var(--text-dark); margin-bottom: 1rem;">
+                    <i class="fas fa-server me-2" style="color: var(--secondary-color);"></i>
+                    ข้อมูลเซิร์ฟเวอร์
+                </h6>
+                <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-light); font-size: 0.9rem;">
+                    <li>Database: PostgreSQL 15</li>
+                    <li>Backend: Flask (Python)</li>
+                    <li>Server: Ubuntu 24</li>
+                    <li>Status: <span style="color: var(--success-color);">Online</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 style="color: var(--text-dark); margin-bottom: 1rem;">
+                    <i class="fas fa-chart-line me-2" style="color: var(--secondary-color);"></i>
+                    สถิติประจำวัน
+                </h6>
+                <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-light); font-size: 0.9rem;">
+                    <li>การจองวันนี้: 89</li>
+                    <li>ผู้เข้าชมเว็บ: 1,234</li>
+                    <li>รายได้วันนี้: ฿456,789</li>
+                    <li>อัตราการจอง: 78%</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-success">
+    <i class="fas fa-check-circle me-2"></i>
+    <strong>ระบบทำงานปกติ</strong> - ทุกบริการทำงานได้เป็นปกติ ข้อมูลถูกอัพเดทล่าสุดเมื่อ: {{ "วันนี้ %H:%M น."|strftime }}
+</div>
+
+<script>
+function copyToken(token, sessionId) {
+    navigator.clipboard.writeText(token).then(() => {
+        const btn = event.target.closest('.copy-btn');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i>';
+        btn.style.backgroundColor = 'var(--success-color)';
+        btn.style.borderColor = 'var(--success-color)';
+        btn.style.color = '#ffffff';
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.style.backgroundColor = '';
+            btn.style.borderColor = '';
+            btn.style.color = '';
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}

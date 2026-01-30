@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}จองห้องพัก - {{ hotel[1] }} - StayHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .booking-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .booking-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        color: #ffffff;
+        border-radius: 16px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .booking-header h2 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .hotel-summary {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .hotel-summary-name {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.8rem;
+    }
+
+    .price-display {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--secondary-color);
+    }
+
+    .booking-form {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-control {
+        border: 2px solid var(--border-color);
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: var(--secondary-color);
+        box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.25);
+    }
+
+    .btn-submit-booking {
+        width: 100%;
+        padding: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        background: linear-gradient(135deg, var(--secondary-color), #f6e05e);
+        border: none;
+        color: var(--text-dark);
+        border-radius: 10px;
+        margin-top: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-submit-booking:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
+    }
+
+    .info-box {
+        background-color: #ebf8ff;
+        border-left: 4px solid var(--primary-color);
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-box p {
+        margin: 0;
+        color: #2c5282;
+    }
+
+    .date-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .date-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="booking-container">
+    <div class="booking-header">
+        <i class="fas fa-calendar-check" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
+        <h2>จองห้องพัก</h2>
+        <p style="margin: 0; font-size: 1rem;">กรอกรายละเอียดการจองของคุณ</p>
+    </div>
+
+    <div class="hotel-summary">
+        <div class="hotel-summary-name">
+            <i class="fas fa-hotel me-2" style="color: var(--secondary-color);"></i>
+            {{ hotel[1] }}
+        </div>
+        <div class="price-display">
+            ฿{{ "{:,.0f}".format(hotel[2]) }}
+            <span style="font-size: 1rem; font-weight: 400; color: var(--text-light);">/คืน</span>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <p>
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>นโยบายการยกเลิก:</strong> ยกเลิกฟรีภายใน 24 ชั่วโมงก่อนเช็คอิน หลังจากนั้นจะเก็บค่าธรรมเนียม 50%
+        </p>
+    </div>
+
+    <form method="POST" class="booking-form">
+        <div class="date-row mb-3">
+            <div>
+                <label for="check_in" class="form-label">
+                    <i class="fas fa-calendar-day me-1"></i> วันที่เช็คอิน
+                </label>
+                <input type="date" 
+                       class="form-control" 
+                       id="check_in" 
+                       name="check_in"
+                       min="{{ (now + timedelta(days=1)).strftime('%Y-%m-%d') }}"
+                       required>
+            </div>
+            <div>
+                <label for="check_out" class="form-label">
+                    <i class="fas fa-calendar-day me-1"></i> วันที่เช็คเอาท์
+                </label>
+                <input type="date" 
+                       class="form-control" 
+                       id="check_out" 
+                       name="check_out"
+                       min="{{ (now + timedelta(days=2)).strftime('%Y-%m-%d') }}"
+                       required>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="num_guests" class="form-label">
+                <i class="fas fa-users me-1"></i> จำนวนผู้เข้าพัก
+            </label>
+            <select class="form-control" id="num_guests" name="num_guests" required>
+                <option value="1">1 คน</option>
+                <option value="2" selected>2 คน</option>
+                <option value="3">3 คน</option>
+                <option value="4">4 คน</option>
+                <option value="5">5 คน</option>
+                <option value="6">6 คน</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="special_requests" class="form-label">
+                <i class="fas fa-comment-dots me-1"></i> คำขอพิเศษ (ถ้ามี)
+            </label>
+            <textarea class="form-control" 
+                      id="special_requests" 
+                      name="special_requests" 
+                      rows="4"
+                      placeholder="เช่น ต้องการห้องชั้นสูง, ต้องการเตียงเสริม, แพ้อาหาร ฯลฯ"></textarea>
+        </div>
+
+        <div class="info-box">
+            <p>
+                <i class="fas fa-shield-alt me-2"></i>
+                ข้อมูลของคุณได้รับการปกป้องด้วยมาตรฐานความปลอดภัยระดับสากล
+            </p>
+        </div>
+
+        <button type="submit" class="btn btn-submit-booking">
+            <i class="fas fa-check-circle me-2"></i>ยืนยันการจอง
+        </button>
+
+        <div class="text-center mt-3">
+            <a href="{{ url_for('hotel_detail', hotel_id=hotel[0]) }}" 
+               style="color: var(--text-light); text-decoration: none;">
+                <i class="fas fa-arrow-left me-1"></i>กลับไปดูรายละเอียดโรงแรม
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+    // ตรวจสอบวันที่เช็คอินและเช็คเอาท์
+    const checkInInput = document.getElementById('check_in');
+    const checkOutInput = document.getElementById('check_out');
+
+    checkInInput.addEventListener('change', function() {
+        const checkInDate = new Date(this.value);
+        const minCheckOut = new Date(checkInDate);
+        minCheckOut.setDate(minCheckOut.getDate() + 1);
+        
+        checkOutInput.min = minCheckOut.toISOString().split('T')[0];
+        
+        if (checkOutInput.value && new Date(checkOutInput.value) <= checkInDate) {
+            checkOutInput.value = '';
+        }
+    });
+</script>
+{% endblock %}
