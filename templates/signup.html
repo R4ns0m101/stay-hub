@@ -13,12 +13,56 @@
     }
 
     .signup-card {
-        max-width: 600px;
+        max-width: 960px;
         width: 100%;
         background: #ffffff;
         border-radius: 16px;
         box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         overflow: hidden;
+        display: flex;
+    }
+
+    .signup-image {
+        width: 40%;
+        background: url('https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&h=900&fit=crop') center/cover no-repeat;
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+    }
+
+    .signup-image-overlay {
+        background: linear-gradient(to top, rgba(26, 54, 93, 0.9), transparent);
+        width: 100%;
+        padding: 2rem;
+        color: #ffffff;
+    }
+
+    .signup-image-overlay h3 {
+        font-size: 1.4rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .signup-image-overlay p {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    .signup-form-side {
+        width: 60%;
+    }
+
+    @media (max-width: 768px) {
+        .signup-card {
+            max-width: 600px;
+            flex-direction: column;
+        }
+        .signup-image {
+            display: none;
+        }
+        .signup-form-side {
+            width: 100%;
+        }
     }
 
     .signup-header {
@@ -151,12 +195,19 @@
 {% block content %}
 <div class="signup-container">
     <div class="signup-card">
+        <div class="signup-image">
+            <div class="signup-image-overlay">
+                <h3>เริ่มต้นการเดินทาง</h3>
+                <p>สมัครวันนี้ รับสิทธิพิเศษมากมาย</p>
+            </div>
+        </div>
+        <div class="signup-form-side">
         <div class="signup-header">
             <i class="fas fa-user-plus" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
             <h2>สมัครสมาชิก</h2>
             <p>เริ่มต้นการเดินทางกับ StayHub วันนี้</p>
         </div>
-        
+
         <div class="signup-body">
             {% if error %}
             <div class="alert alert-danger">
@@ -262,10 +313,11 @@
 
             <div class="login-link">
                 <p style="margin: 0; color: var(--text-light);">
-                    มีบัญชีอยู่แล้ว? 
+                    มีบัญชีอยู่แล้ว?
                     <a href="{{ url_for('login') }}">เข้าสู่ระบบ</a>
                 </p>
             </div>
+        </div>
         </div>
     </div>
 </div>

@@ -153,7 +153,7 @@ def dashboard():
     user = cur.fetchone()
 
     # ดึงข้อมูลจังหวัดยอดนิยม
-    cur.execute("SELECT id, name_th, slug, hotel_count FROM provinces WHERE is_popular = TRUE ORDER BY hotel_count DESC")
+    cur.execute("SELECT id, name_th, slug, hotel_count, image_url FROM provinces WHERE is_popular = TRUE ORDER BY hotel_count DESC")
     popular_provinces = cur.fetchall()
 
     # ดึงสถิติการจองจริงของผู้ใช้
@@ -235,7 +235,7 @@ def provinces():
     conn = get_db_connection()
     cur = conn.cursor()
     
-    cur.execute("SELECT id, name_th, name_en, slug, description, hotel_count FROM provinces ORDER BY is_popular DESC, name_th")
+    cur.execute("SELECT id, name_th, name_en, slug, description, hotel_count, image_url FROM provinces ORDER BY is_popular DESC, name_th")
     all_provinces = cur.fetchall()
     
     cur.close()
@@ -263,8 +263,8 @@ def province_detail(slug):
     
     # ดึงโรงแรมในจังหวัด
     cur.execute("""
-        SELECT id, name, description, address, price_per_night, star_rating, amenities, is_available
-        FROM hotels 
+        SELECT id, name, description, address, price_per_night, star_rating, amenities, is_available, image_url
+        FROM hotels
         WHERE province_id = %s AND is_available = TRUE
         ORDER BY star_rating DESC, price_per_night DESC
     """, (province[0],))
@@ -294,20 +294,20 @@ def hotel_detail(hotel_id):
     
     # ดึงข้อมูลโรงแรม
     cur.execute("""
-        SELECT h.id, h.name, h.description, h.address, h.price_per_night, 
+        SELECT h.id, h.name, h.description, h.address, h.price_per_night,
                h.star_rating, h.amenities, h.total_rooms, h.available_rooms,
-               p.name_th, p.slug
+               p.name_th, p.slug, h.image_url
         FROM hotels h
         JOIN provinces p ON h.province_id = p.id
         WHERE h.id = %s
     """, (hotel_id,))
     hotel = cur.fetchone()
-    
+
     if not hotel:
         cur.close()
         conn.close()
         return "Hotel not found", 404
-    
+
     # ดึงรีวิว
     cur.execute("""
         SELECT r.rating, r.comment, r.created_at, u.username
@@ -318,10 +318,10 @@ def hotel_detail(hotel_id):
         LIMIT 10
     """, (hotel_id,))
     reviews = cur.fetchall()
-    
+
     cur.close()
     conn.close()
-    
+
     return render_template('hotel_detail.html',
                           hotel={
                               'id': hotel[0],
@@ -334,7 +334,8 @@ def hotel_detail(hotel_id):
                               'total_rooms': hotel[7],
                               'available_rooms': hotel[8],
                               'province_name': hotel[9],
-                              'province_slug': hotel[10]
+                              'province_slug': hotel[10],
+                              'image_url': hotel[11]
                           },
                           reviews=reviews)
 
