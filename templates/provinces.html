@@ -128,7 +128,7 @@
         <a href="{{ url_for('province_detail', slug=province[3]) }}" class="province-card">
             <div class="province-image">
                 {% if province[6] %}
-                <img src="{{ province[6] }}" alt="{{ province[0] }}" loading="lazy">
+                <img src="{{ province[6] }}" alt="{{ province[1] }}" loading="lazy">
                 {% else %}
                 <div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:3.5rem;color:#a0aec0;">
                     <i class="fas fa-map-marker-alt"></i>
@@ -136,8 +136,8 @@
                 {% endif %}
             </div>
             <div class="province-body">
-                <div class="province-name">{{ province[0] }}</div>
-                <div class="province-name-en">{{ province[1] }}</div>
+                <div class="province-name">{{ province[1] }}</div>
+                <div class="province-name-en">{{ province[2] }}</div>
                 <div class="province-description">
                     {{ province[4][:120] }}{% if province[4]|length > 120 %}...{% endif %}
                 </div>

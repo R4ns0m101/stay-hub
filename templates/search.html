@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}ค้นหาโรงแรม - StayHub{% endblock %}
+{% block title %}ค้นหาผู้ใช้ - StayHub{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -237,10 +237,10 @@
 <div class="search-header">
     <h2>
         <i class="fas fa-search me-2"></i>
-        ค้นหาโรงแรมที่ใช่สำหรับคุณ
+        ค้นหาผู้ใช้ในระบบ
     </h2>
     <p style="margin: 0; font-size: 1.05rem;">
-        ค้นพบที่พักในฝันจากหลากหลายตัวเลือกทั่วประเทศไทย
+        ค้นหาข้อมูลผู้ใช้งานในระบบ StayHub
     </p>
 </div>
 
@@ -250,9 +250,9 @@
             <div class="search-box">
                 <div class="search-input-group">
                     <i class="fas fa-search ms-3 me-2" style="color: var(--text-light);"></i>
-                    <input type="text" 
-                           name="search" 
-                           placeholder="ค้นหาด้วยชื่อโรงแรม, สถานที่, หรือชื่อผู้ใช้..." 
+                    <input type="text"
+                           name="search"
+                           placeholder="ค้นหาด้วยชื่อผู้ใช้..."
                            value="{{ search_query }}"
                            required>
                     <button type="submit">
@@ -302,10 +302,8 @@
                 </div>
             </div>
             <div class="result-body-flex">
-                <!-- รูปภาพโรงแรม - ใส่รูปจริงตรงนี้ -->
                 <div class="hotel-thumb">
-                    <i class="fas fa-hotel"></i>
-                    <!-- TODO: แทนที่ด้วย <img src="/static/images/hotel-{{ user[0] }}.jpg" alt="{{ user[1] }}"> -->
+                    <i class="fas fa-user-circle"></i>
                 </div>
                 
                 <div class="hotel-info">
@@ -343,7 +341,7 @@
         <div class="no-results">
             <i class="fas fa-search-minus"></i>
             <h4 style="color: var(--text-dark); margin-bottom: 0.5rem;">ไม่พบผลการค้นหา</h4>
-            <p style="margin: 0;">ไม่พบโรงแรมที่ตรงกับ "{{ search_query }}" กรุณาลองค้นหาด้วยคำอื่น</p>
+            <p style="margin: 0;">ไม่พบผู้ใช้ที่ตรงกับ "{{ search_query }}" กรุณาลองค้นหาด้วยคำอื่น</p>
         </div>
     </div>
 </div>

@@ -146,53 +146,54 @@ def dashboard():
     conn = get_db_connection()
     cur = conn.cursor()
 
-    user_id = session['user_id']
+    try:
+        user_id = session['user_id']
 
-    # ดึงข้อมูล user
-    cur.execute("SELECT username, email, full_name, role, created_at FROM users WHERE id = %s", (user_id,))
-    user = cur.fetchone()
+        # ดึงข้อมูล user
+        cur.execute("SELECT username, email, full_name, role, created_at FROM users WHERE id = %s", (user_id,))
+        user = cur.fetchone()
 
-    # ดึงข้อมูลจังหวัดยอดนิยม
-    cur.execute("SELECT id, name_th, slug, hotel_count, image_url FROM provinces WHERE is_popular = TRUE ORDER BY hotel_count DESC")
-    popular_provinces = cur.fetchall()
+        # ดึงข้อมูลจังหวัดยอดนิยม
+        cur.execute("SELECT id, name_th, slug, hotel_count, image_url FROM provinces WHERE is_popular = TRUE ORDER BY hotel_count DESC")
+        popular_provinces = cur.fetchall()
 
-    # ดึงสถิติการจองจริงของผู้ใช้
-    cur.execute("SELECT COUNT(*) FROM bookings WHERE user_id = %s", (user_id,))
-    total_bookings = cur.fetchone()[0]
+        # ดึงสถิติการจองจริงของผู้ใช้
+        cur.execute("SELECT COUNT(*) FROM bookings WHERE user_id = %s", (user_id,))
+        total_bookings = cur.fetchone()[0]
 
-    cur.execute("SELECT COUNT(*) FROM bookings WHERE user_id = %s AND check_in_date > CURRENT_DATE AND status != 'cancelled'", (user_id,))
-    upcoming_bookings = cur.fetchone()[0]
+        cur.execute("SELECT COUNT(*) FROM bookings WHERE user_id = %s AND check_in_date > CURRENT_DATE AND status != 'cancelled'", (user_id,))
+        upcoming_bookings = cur.fetchone()[0]
 
-    cur.execute("SELECT COUNT(*) FROM reviews WHERE user_id = %s", (user_id,))
-    total_reviews = cur.fetchone()[0]
+        cur.execute("SELECT COUNT(*) FROM reviews WHERE user_id = %s", (user_id,))
+        total_reviews = cur.fetchone()[0]
 
-    # ดึงการจองล่าสุดจริงของผู้ใช้
-    cur.execute("""
-        SELECT b.id, h.name, b.check_in_date, b.check_out_date,
-               b.num_guests, b.total_price, b.status
-        FROM bookings b
-        JOIN hotels h ON b.hotel_id = h.id
-        WHERE b.user_id = %s
-        ORDER BY b.created_at DESC
-        LIMIT 5
-    """, (user_id,))
-    recent_bookings = cur.fetchall()
+        # ดึงการจองล่าสุดจริงของผู้ใช้
+        cur.execute("""
+            SELECT b.id, h.name, b.check_in_date, b.check_out_date,
+                   b.num_guests, b.total_price, b.status
+            FROM bookings b
+            JOIN hotels h ON b.hotel_id = h.id
+            WHERE b.user_id = %s
+            ORDER BY b.created_at DESC
+            LIMIT 5
+        """, (user_id,))
+        recent_bookings = cur.fetchall()
 
-    cur.close()
-    conn.close()
-
-    return render_template('dashboard.html',
-                          username=user[0],
-                          email=user[1],
-                          full_name=user[2],
-                          role=user[3],
-                          created_at=user[4],
-                          session_token=session.get('session_token', 'N/A'),
-                          popular_provinces=popular_provinces,
-                          total_bookings=total_bookings,
-                          upcoming_bookings=upcoming_bookings,
-                          total_reviews=total_reviews,
-                          recent_bookings=recent_bookings)
+        return render_template('dashboard.html',
+                              username=user[0],
+                              email=user[1],
+                              full_name=user[2],
+                              role=user[3],
+                              created_at=user[4],
+                              session_token=session.get('session_token', 'N/A'),
+                              popular_provinces=popular_provinces,
+                              total_bookings=total_bookings,
+                              upcoming_bookings=upcoming_bookings,
+                              total_reviews=total_reviews,
+                              recent_bookings=recent_bookings)
+    finally:
+        cur.close()
+        conn.close()
 
 @app.route('/search', methods=['GET', 'POST'])
 def search():
@@ -206,24 +207,22 @@ def search():
     
     if request.method == 'POST':
         search_query = request.form.get('search', '')
-        
+
         conn = get_db_connection()
         cur = conn.cursor()
-        
-        # VULNERABLE: SQL Injection Union Based
-        # ตัวอย่างการโจมตี: ' UNION SELECT id, name, secret_flag, address FROM hotels--
-        query = f"SELECT id, username, email, full_name FROM users WHERE username LIKE '%{search_query}%'"
-        
+
         try:
+            # VULNERABLE: SQL Injection Union Based
+            # ตัวอย่างการโจมตี: ' UNION SELECT id, name, secret_flag, address FROM hotels--
+            query = f"SELECT id, username, email, full_name FROM users WHERE username LIKE '%{search_query}%'"
             cur.execute(query)
             results = cur.fetchall()
-            cur.close()
-            conn.close()
         except Exception as e:
             error = str(e)
+        finally:
             cur.close()
             conn.close()
-    
+
     return render_template('search.html', results=results, search_query=search_query, error=error)
 
 @app.route('/provinces')
@@ -231,193 +230,204 @@ def provinces():
     """หน้าแสดงจังหวัดทั้งหมด"""
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     conn = get_db_connection()
     cur = conn.cursor()
-    
-    cur.execute("SELECT id, name_th, name_en, slug, description, hotel_count, image_url FROM provinces ORDER BY is_popular DESC, name_th")
-    all_provinces = cur.fetchall()
-    
-    cur.close()
-    conn.close()
-    
-    return render_template('provinces.html', provinces=all_provinces)
+
+    try:
+        cur.execute("SELECT id, name_th, name_en, slug, description, hotel_count, image_url FROM provinces ORDER BY is_popular DESC, name_th")
+        all_provinces = cur.fetchall()
+        return render_template('provinces.html', provinces=all_provinces)
+    finally:
+        cur.close()
+        conn.close()
 
 @app.route('/province/<slug>')
 def province_detail(slug):
     """หน้ารายละเอียดจังหวัด - แสดงโรงแรมในจังหวัดนั้นๆ"""
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     conn = get_db_connection()
     cur = conn.cursor()
-    
-    # ดึงข้อมูลจังหวัด
-    cur.execute("SELECT id, name_th, name_en, description FROM provinces WHERE slug = %s", (slug,))
-    province = cur.fetchone()
-    
-    if not province:
+
+    try:
+        # ดึงข้อมูลจังหวัด
+        cur.execute("SELECT id, name_th, name_en, description FROM provinces WHERE slug = %s", (slug,))
+        province = cur.fetchone()
+
+        if not province:
+            return "Province not found", 404
+
+        # ดึงโรงแรมในจังหวัด
+        cur.execute("""
+            SELECT id, name, description, address, price_per_night, star_rating, amenities, is_available, image_url
+            FROM hotels
+            WHERE province_id = %s AND is_available = TRUE
+            ORDER BY star_rating DESC, price_per_night DESC
+        """, (province[0],))
+        hotels = cur.fetchall()
+
+        return render_template('province_detail.html',
+                              province={
+                                  'id': province[0],
+                                  'name_th': province[1],
+                                  'name_en': province[2],
+                                  'description': province[3],
+                                  'slug': slug
+                              },
+                              hotels=hotels)
+    finally:
         cur.close()
         conn.close()
-        return "Province not found", 404
-    
-    # ดึงโรงแรมในจังหวัด
-    cur.execute("""
-        SELECT id, name, description, address, price_per_night, star_rating, amenities, is_available, image_url
-        FROM hotels
-        WHERE province_id = %s AND is_available = TRUE
-        ORDER BY star_rating DESC, price_per_night DESC
-    """, (province[0],))
-    hotels = cur.fetchall()
-    
-    cur.close()
-    conn.close()
-    
-    return render_template('province_detail.html', 
-                          province={
-                              'id': province[0],
-                              'name_th': province[1],
-                              'name_en': province[2],
-                              'description': province[3],
-                              'slug': slug
-                          },
-                          hotels=hotels)
 
 @app.route('/hotel/<int:hotel_id>')
 def hotel_detail(hotel_id):
     """หน้ารายละเอียดโรงแรม"""
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     conn = get_db_connection()
     cur = conn.cursor()
-    
-    # ดึงข้อมูลโรงแรม
-    cur.execute("""
-        SELECT h.id, h.name, h.description, h.address, h.price_per_night,
-               h.star_rating, h.amenities, h.total_rooms, h.available_rooms,
-               p.name_th, p.slug, h.image_url
-        FROM hotels h
-        JOIN provinces p ON h.province_id = p.id
-        WHERE h.id = %s
-    """, (hotel_id,))
-    hotel = cur.fetchone()
 
-    if not hotel:
+    try:
+        # ดึงข้อมูลโรงแรม
+        cur.execute("""
+            SELECT h.id, h.name, h.description, h.address, h.price_per_night,
+                   h.star_rating, h.amenities, h.total_rooms, h.available_rooms,
+                   p.name_th, p.slug, h.image_url
+            FROM hotels h
+            JOIN provinces p ON h.province_id = p.id
+            WHERE h.id = %s
+        """, (hotel_id,))
+        hotel = cur.fetchone()
+
+        if not hotel:
+            return "Hotel not found", 404
+
+        # ดึงรีวิว
+        cur.execute("""
+            SELECT r.rating, r.comment, r.created_at, u.username
+            FROM reviews r
+            JOIN users u ON r.user_id = u.id
+            WHERE r.hotel_id = %s
+            ORDER BY r.created_at DESC
+            LIMIT 10
+        """, (hotel_id,))
+        reviews = cur.fetchall()
+
+        return render_template('hotel_detail.html',
+                              hotel={
+                                  'id': hotel[0],
+                                  'name': hotel[1],
+                                  'description': hotel[2],
+                                  'address': hotel[3],
+                                  'price_per_night': hotel[4],
+                                  'star_rating': hotel[5],
+                                  'amenities': hotel[6],
+                                  'total_rooms': hotel[7],
+                                  'available_rooms': hotel[8],
+                                  'province_name': hotel[9],
+                                  'province_slug': hotel[10],
+                                  'image_url': hotel[11]
+                              },
+                              reviews=reviews)
+    finally:
         cur.close()
         conn.close()
-        return "Hotel not found", 404
-
-    # ดึงรีวิว
-    cur.execute("""
-        SELECT r.rating, r.comment, r.created_at, u.username
-        FROM reviews r
-        JOIN users u ON r.user_id = u.id
-        WHERE r.hotel_id = %s
-        ORDER BY r.created_at DESC
-        LIMIT 10
-    """, (hotel_id,))
-    reviews = cur.fetchall()
-
-    cur.close()
-    conn.close()
-
-    return render_template('hotel_detail.html',
-                          hotel={
-                              'id': hotel[0],
-                              'name': hotel[1],
-                              'description': hotel[2],
-                              'address': hotel[3],
-                              'price_per_night': hotel[4],
-                              'star_rating': hotel[5],
-                              'amenities': hotel[6],
-                              'total_rooms': hotel[7],
-                              'available_rooms': hotel[8],
-                              'province_name': hotel[9],
-                              'province_slug': hotel[10],
-                              'image_url': hotel[11]
-                          },
-                          reviews=reviews)
 
 @app.route('/book/<int:hotel_id>', methods=['GET', 'POST'])
 def book_hotel(hotel_id):
     """หน้าจองโรงแรม"""
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     conn = get_db_connection()
     cur = conn.cursor()
-    
-    if request.method == 'POST':
-        check_in = request.form.get('check_in')
-        check_out = request.form.get('check_out')
-        num_guests = int(request.form.get('num_guests', 1))
-        special_requests = request.form.get('special_requests', '')
-        
-        # คำนวณจำนวนคืน
-        check_in_date = datetime.strptime(check_in, '%Y-%m-%d')
-        check_out_date = datetime.strptime(check_out, '%Y-%m-%d')
-        num_nights = (check_out_date - check_in_date).days
-        
-        # ดึงราคาโรงแรม
-        cur.execute("SELECT price_per_night FROM hotels WHERE id = %s", (hotel_id,))
-        price_per_night = cur.fetchone()[0]
-        total_price = price_per_night * num_nights
-        
-        # บันทึกการจอง
-        cur.execute("""
-            INSERT INTO bookings (user_id, hotel_id, check_in_date, check_out_date, 
-                                num_guests, total_price, status, special_requests)
-            VALUES (%s, %s, %s, %s, %s, %s, 'pending', %s)
-            RETURNING id
-        """, (session['user_id'], hotel_id, check_in, check_out, num_guests, total_price, special_requests))
-        
-        booking_id = cur.fetchone()[0]
-        conn.commit()
+
+    try:
+        if request.method == 'POST':
+            check_in = request.form.get('check_in')
+            check_out = request.form.get('check_out')
+            special_requests = request.form.get('special_requests', '')
+
+            try:
+                num_guests = int(request.form.get('num_guests', 1))
+            except (ValueError, TypeError):
+                num_guests = 1
+
+            # คำนวณจำนวนคืน
+            check_in_date = datetime.strptime(check_in, '%Y-%m-%d')
+            check_out_date = datetime.strptime(check_out, '%Y-%m-%d')
+            num_nights = (check_out_date - check_in_date).days
+
+            if num_nights <= 0:
+                return "Invalid dates: check-out must be after check-in", 400
+
+            # ดึงราคาโรงแรม
+            cur.execute("SELECT price_per_night FROM hotels WHERE id = %s", (hotel_id,))
+            hotel_row = cur.fetchone()
+
+            if not hotel_row:
+                return "Hotel not found", 404
+
+            price_per_night = hotel_row[0]
+            total_price = price_per_night * num_nights
+
+            # บันทึกการจอง
+            cur.execute("""
+                INSERT INTO bookings (user_id, hotel_id, check_in_date, check_out_date,
+                                    num_guests, total_price, status, special_requests)
+                VALUES (%s, %s, %s, %s, %s, %s, 'pending', %s)
+                RETURNING id
+            """, (session['user_id'], hotel_id, check_in, check_out, num_guests, total_price, special_requests))
+
+            booking_id = cur.fetchone()[0]
+            conn.commit()
+
+            return redirect(url_for('booking_success', booking_id=booking_id))
+
+        # ดึงข้อมูลโรงแรม
+        cur.execute("SELECT id, name, price_per_night FROM hotels WHERE id = %s", (hotel_id,))
+        hotel = cur.fetchone()
+
+        if not hotel:
+            return "Hotel not found", 404
+
+        return render_template('book_hotel.html', hotel=hotel,
+                               min_check_in=(datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d'),
+                               min_check_out=(datetime.now() + timedelta(days=2)).strftime('%Y-%m-%d'))
+    finally:
         cur.close()
         conn.close()
-        
-        return redirect(url_for('booking_success', booking_id=booking_id))
-    
-    # ดึงข้อมูลโรงแรม
-    cur.execute("SELECT id, name, price_per_night FROM hotels WHERE id = %s", (hotel_id,))
-    hotel = cur.fetchone()
-    
-    cur.close()
-    conn.close()
-    
-    if not hotel:
-        return "Hotel not found", 404
-    
-    return render_template('book_hotel.html', hotel=hotel,
-                           min_check_in=(datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d'),
-                           min_check_out=(datetime.now() + timedelta(days=2)).strftime('%Y-%m-%d'))
 
 @app.route('/booking-success/<int:booking_id>')
 def booking_success(booking_id):
     """หน้าแสดงผลการจองสำเร็จ"""
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     conn = get_db_connection()
     cur = conn.cursor()
-    
-    cur.execute("""
-        SELECT b.id, h.name, b.check_in_date, b.check_out_date, 
-               b.num_guests, b.total_price, b.status
-        FROM bookings b
-        JOIN hotels h ON b.hotel_id = h.id
-        WHERE b.id = %s AND b.user_id = %s
-    """, (booking_id, session['user_id']))
-    
-    booking = cur.fetchone()
-    cur.close()
-    conn.close()
-    
-    if not booking:
-        return "Booking not found", 404
-    
-    return render_template('booking_success.html', booking=booking)
+
+    try:
+        cur.execute("""
+            SELECT b.id, h.name, b.check_in_date, b.check_out_date,
+                   b.num_guests, b.total_price, b.status
+            FROM bookings b
+            JOIN hotels h ON b.hotel_id = h.id
+            WHERE b.id = %s AND b.user_id = %s
+        """, (booking_id, session['user_id']))
+
+        booking = cur.fetchone()
+
+        if not booking:
+            return "Booking not found", 404
+
+        return render_template('booking_success.html', booking=booking)
+    finally:
+        cur.close()
+        conn.close()
 
 @app.route('/profile')
 def profile():
@@ -429,109 +439,116 @@ def profile():
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # ดึงข้อมูลโปรไฟล์
-    cur.execute("""
-        SELECT u.username, u.email, u.full_name, u.role,
-               p.phone, p.address, p.credit_card, p.secret_note
-        FROM users u
-        LEFT JOIN user_profiles p ON u.id = p.user_id
-        WHERE u.id = %s
-    """, (user_id,))
+    try:
+        # ดึงข้อมูลโปรไฟล์
+        cur.execute("""
+            SELECT u.username, u.email, u.full_name, u.role,
+                   p.phone, p.address, p.credit_card, p.secret_note
+            FROM users u
+            LEFT JOIN user_profiles p ON u.id = p.user_id
+            WHERE u.id = %s
+        """, (user_id,))
 
-    profile = cur.fetchone()
+        profile_row = cur.fetchone()
 
-    # ดึงการจองของผู้ใช้
-    cur.execute("""
-        SELECT b.id, h.name, b.check_in_date, b.check_out_date,
-               b.total_price, b.status, b.created_at
-        FROM bookings b
-        JOIN hotels h ON b.hotel_id = h.id
-        WHERE b.user_id = %s
-        ORDER BY b.created_at DESC
-        LIMIT 10
-    """, (user_id,))
+        # ดึงการจองของผู้ใช้
+        cur.execute("""
+            SELECT b.id, h.name, b.check_in_date, b.check_out_date,
+                   b.total_price, b.status, b.created_at
+            FROM bookings b
+            JOIN hotels h ON b.hotel_id = h.id
+            WHERE b.user_id = %s
+            ORDER BY b.created_at DESC
+            LIMIT 10
+        """, (user_id,))
 
-    bookings = cur.fetchall()
+        bookings = cur.fetchall()
 
-    # ดึงสถิติจริงของผู้ใช้
-    cur.execute("SELECT COUNT(*) FROM bookings WHERE user_id = %s", (user_id,))
-    total_bookings = cur.fetchone()[0]
+        # ดึงสถิติจริงของผู้ใช้
+        cur.execute("SELECT COUNT(*) FROM bookings WHERE user_id = %s", (user_id,))
+        total_bookings = cur.fetchone()[0]
 
-    cur.execute("SELECT COUNT(*) FROM reviews WHERE user_id = %s", (user_id,))
-    total_reviews = cur.fetchone()[0]
+        cur.execute("SELECT COUNT(*) FROM reviews WHERE user_id = %s", (user_id,))
+        total_reviews = cur.fetchone()[0]
 
-    cur.close()
-    conn.close()
+        if profile_row:
+            profile_data = {
+                'username': profile_row[0],
+                'email': profile_row[1],
+                'full_name': profile_row[2],
+                'role': profile_row[3],
+                'phone': profile_row[4],
+                'address': profile_row[5],
+                'credit_card': profile_row[6],
+                'secret_note': profile_row[7]
+            }
+        else:
+            profile_data = None
 
-    if profile:
-        profile_data = {
-            'username': profile[0],
-            'email': profile[1],
-            'full_name': profile[2],
-            'role': profile[3],
-            'phone': profile[4],
-            'address': profile[5],
-            'credit_card': profile[6],
-            'secret_note': profile[7]
-        }
-    else:
-        profile_data = None
-
-    return render_template('profile.html', profile=profile_data, bookings=bookings,
-                          total_bookings=total_bookings, total_reviews=total_reviews)
+        return render_template('profile.html', profile=profile_data, bookings=bookings,
+                              total_bookings=total_bookings, total_reviews=total_reviews)
+    finally:
+        cur.close()
+        conn.close()
 
 @app.route('/admin')
 def admin():
     """หน้า Admin - เฉพาะ Admin เท่านั้น"""
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     if session.get('role') != 'admin':
         return "Access Denied! Admin only.", 403
-    
+
     conn = get_db_connection()
     cur = conn.cursor()
-    
-    # แสดงข้อมูล users ทั้งหมด
-    cur.execute("SELECT id, username, email, full_name, role, created_at FROM users ORDER BY id")
-    all_users = cur.fetchall()
-    
-    # แสดง sessions ที่ active
-    cur.execute("""
-        SELECT s.id, u.username, s.session_token, s.created_at, s.expires_at, s.ip_address
-        FROM sessions s
-        JOIN users u ON s.user_id = u.id
-        WHERE s.expires_at > NOW()
-        ORDER BY s.created_at DESC
-    """)
-    active_sessions = cur.fetchall()
-    
-    # แสดง flags
-    cur.execute("SELECT step, flag_name, flag_value, hint FROM flags ORDER BY step")
-    flags = cur.fetchall()
-    
-    # สถิติระบบ
-    cur.execute("SELECT COUNT(*) FROM users")
-    total_users = cur.fetchone()[0]
-    
-    cur.execute("SELECT COUNT(*) FROM hotels")
-    total_hotels = cur.fetchone()[0]
-    
-    cur.execute("SELECT COUNT(*) FROM bookings WHERE status = 'confirmed'")
-    total_bookings = cur.fetchone()[0]
-    
-    cur.close()
-    conn.close()
-    
-    return render_template('admin.html', 
-                          users=all_users, 
-                          sessions=active_sessions,
-                          flags=flags,
-                          stats={
-                              'total_users': total_users,
-                              'total_hotels': total_hotels,
-                              'total_bookings': total_bookings
-                          })
+
+    try:
+        # แสดงข้อมูล users ทั้งหมด
+        cur.execute("SELECT id, username, email, full_name, role, created_at FROM users ORDER BY id")
+        all_users = cur.fetchall()
+
+        # แสดง sessions ที่ active
+        cur.execute("""
+            SELECT s.id, u.username, s.session_token, s.created_at, s.expires_at, s.ip_address
+            FROM sessions s
+            JOIN users u ON s.user_id = u.id
+            WHERE s.expires_at > NOW()
+            ORDER BY s.created_at DESC
+        """)
+        active_sessions = cur.fetchall()
+
+        # แสดง flags
+        cur.execute("SELECT step, flag_name, flag_value, hint FROM flags ORDER BY step")
+        flags = cur.fetchall()
+
+        # สถิติระบบ
+        cur.execute("SELECT COUNT(*) FROM users")
+        total_users = cur.fetchone()[0]
+
+        cur.execute("SELECT COUNT(*) FROM hotels")
+        total_hotels = cur.fetchone()[0]
+
+        cur.execute("SELECT COUNT(*) FROM bookings WHERE status = 'confirmed'")
+        total_bookings = cur.fetchone()[0]
+
+        cur.execute("SELECT COUNT(*) FROM reviews")
+        total_reviews = cur.fetchone()[0]
+
+        return render_template('admin.html',
+                              users=all_users,
+                              sessions=active_sessions,
+                              flags=flags,
+                              current_time=datetime.now().strftime('%H:%M'),
+                              stats={
+                                  'total_users': total_users,
+                                  'total_hotels': total_hotels,
+                                  'total_bookings': total_bookings,
+                                  'total_reviews': total_reviews
+                              })
+    finally:
+        cur.close()
+        conn.close()
 
 @app.route('/logout')
 def logout():
@@ -545,7 +562,7 @@ def logout():
             conn.commit()
             cur.close()
             conn.close()
-        except:
+        except Exception:
             pass
     
     session.clear()
@@ -562,27 +579,29 @@ def check_session():
     
     conn = get_db_connection()
     cur = conn.cursor()
-    
-    cur.execute("""
-        SELECT u.id, u.username, u.role 
-        FROM sessions s
-        JOIN users u ON s.user_id = u.id
-        WHERE s.session_token = %s AND s.expires_at > NOW()
-    """, (token,))
-    
-    result = cur.fetchone()
-    cur.close()
-    conn.close()
-    
-    if result:
-        return jsonify({
-            'valid': True,
-            'user_id': result[0],
-            'username': result[1],
-            'role': result[2]
-        })
-    else:
-        return jsonify({'valid': False}), 404
+
+    try:
+        cur.execute("""
+            SELECT u.id, u.username, u.role
+            FROM sessions s
+            JOIN users u ON s.user_id = u.id
+            WHERE s.session_token = %s AND s.expires_at > NOW()
+        """, (token,))
+
+        result = cur.fetchone()
+
+        if result:
+            return jsonify({
+                'valid': True,
+                'user_id': result[0],
+                'username': result[1],
+                'role': result[2]
+            })
+        else:
+            return jsonify({'valid': False}), 404
+    finally:
+        cur.close()
+        conn.close()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

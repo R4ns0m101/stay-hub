@@ -288,7 +288,7 @@
             <div class="admin-stat-icon">
                 <i class="fas fa-hotel"></i>
             </div>
-            <div class="admin-stat-value">234</div>
+            <div class="admin-stat-value">{{ stats.total_hotels }}</div>
             <div class="admin-stat-label">โรงแรมในระบบ</div>
         </div>
     </div>
@@ -297,8 +297,8 @@
             <div class="admin-stat-icon">
                 <i class="fas fa-calendar-check"></i>
             </div>
-            <div class="admin-stat-value">89</div>
-            <div class="admin-stat-label">การจองวันนี้</div>
+            <div class="admin-stat-value">{{ stats.total_bookings }}</div>
+            <div class="admin-stat-label">การจองที่ยืนยัน</div>
         </div>
     </div>
 </div>
@@ -411,7 +411,7 @@
                             <code class="session-token-cell" id="token-{{ session[0] }}">
                                 {{ session[2] }}
                             </code>
-                            <button class="copy-btn" onclick="copyToken('{{ session[2] }}', {{ session[0] }})">
+                            <button class="copy-btn" onclick="copyToken(event, '{{ session[2] }}', {{ session[0] }})">
                                 <i class="fas fa-copy"></i>
                             </button>
                         </div>
@@ -456,10 +456,10 @@
                 <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-light); font-size: 0.9rem;">
                     <li>users - {{ users|length }} records</li>
                     <li>user_profiles - มีข้อมูลอันตราย</li>
-                    <li>hotels - 234 records</li>
-                    <li>bookings - 89 records</li>
+                    <li>hotels - {{ stats.total_hotels }} records</li>
+                    <li>bookings - {{ stats.total_bookings }} records</li>
                     <li>sessions - {{ sessions|length }} records</li>
-                    <li>reviews - 156 records</li>
+                    <li>reviews - {{ stats.total_reviews }} records</li>
                 </ul>
             </div>
         </div>
@@ -474,8 +474,8 @@
                 </h6>
                 <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-light); font-size: 0.9rem;">
                     <li>Database: PostgreSQL 15</li>
-                    <li>Backend: Flask (Python)</li>
-                    <li>Server: Ubuntu 24</li>
+                    <li>Backend: Flask (Python 3.11)</li>
+                    <li>Server: Docker (python:3.11-slim)</li>
                     <li>Status: <span style="color: var(--success-color);">Online</span></li>
                 </ul>
             </div>
@@ -490,23 +490,64 @@
                     สถิติประจำวัน
                 </h6>
                 <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-light); font-size: 0.9rem;">
-                    <li>การจองวันนี้: 89</li>
-                    <li>ผู้เข้าชมเว็บ: 1,234</li>
-                    <li>รายได้วันนี้: ฿456,789</li>
-                    <li>อัตราการจอง: 78%</li>
+                    <li>ผู้ใช้ทั้งหมด: {{ stats.total_users }} คน</li>
+                    <li>โรงแรมในระบบ: {{ stats.total_hotels }} แห่ง</li>
+                    <li>การจองที่ยืนยัน: {{ stats.total_bookings }} รายการ</li>
+                    <li>รีวิวทั้งหมด: {{ stats.total_reviews }} รายการ</li>
                 </ul>
             </div>
         </div>
     </div>
 </div>
 
+<!-- CTF Flags -->
+{% if flags %}
+<div class="section-header">
+    <h3 class="section-title">
+        <i class="fas fa-flag"></i>
+        CTF Flags
+    </h3>
+    <span class="badge bg-danger" style="padding: 0.5rem 1rem;">
+        <i class="fas fa-flag me-2"></i>
+        {{ flags|length }} Flags
+    </span>
+</div>
+
+<div class="table-container">
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Step</th>
+                    <th>ชื่อ Flag</th>
+                    <th>Flag Value</th>
+                    <th>คำใบ้</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for flag in flags %}
+                <tr>
+                    <td><strong>Step {{ flag[0] }}</strong></td>
+                    <td>{{ flag[1] }}</td>
+                    <td>
+                        <code class="session-token-cell">{{ flag[2] }}</code>
+                    </td>
+                    <td style="color: var(--text-light); font-size: 0.9rem;">{{ flag[3] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
 <div class="alert alert-success">
     <i class="fas fa-check-circle me-2"></i>
-    <strong>ระบบทำงานปกติ</strong> - ทุกบริการทำงานได้เป็นปกติ ข้อมูลถูกอัพเดทล่าสุดเมื่อ: {{ "วันนี้ %H:%M น."|strftime }}
+    <strong>ระบบทำงานปกติ</strong> - ทุกบริการทำงานได้เป็นปกติ ข้อมูลถูกอัพเดทล่าสุดเมื่อ: วันนี้ {{ current_time }} น.
 </div>
 
 <script>
-function copyToken(token, sessionId) {
+function copyToken(event, token, sessionId) {
     navigator.clipboard.writeText(token).then(() => {
         const btn = event.target.closest('.copy-btn');
         const originalHTML = btn.innerHTML;
