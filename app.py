@@ -93,19 +93,22 @@ def signup():
         cur = conn.cursor()
 
         try:
-            # ตรวจสอบว่า username ซ้ำหรือไม่
-            cur.execute("SELECT id FROM users WHERE username = %s", (username,))
-            if cur.fetchone():
+            # ตรวจสอบว่าผู้ใช้เป็นบุคคลใหม่จริง ไม่มีข้อมูลใดๆ ในระบบมาก่อน
+            # ตรวจ username, email, และ full_name ในตาราง users ทั้งหมด
+            cur.execute(
+                "SELECT username, email, full_name FROM users WHERE username = %s OR email = %s OR full_name = %s",
+                (username, email, full_name)
+            )
+            existing = cur.fetchone()
+            if existing:
                 cur.close()
                 conn.close()
-                return render_template('signup.html', error='ชื่อผู้ใช้นี้ถูกใช้งานแล้ว กรุณาเลือกชื่อผู้ใช้อื่น')
-
-            # ตรวจสอบว่า email ซ้ำหรือไม่
-            cur.execute("SELECT id FROM users WHERE email = %s", (email,))
-            if cur.fetchone():
-                cur.close()
-                conn.close()
-                return render_template('signup.html', error='อีเมลนี้ถูกใช้งานแล้ว กรุณาใช้อีเมลอื่น')
+                if existing[0] == username:
+                    return render_template('signup.html', error='ชื่อผู้ใช้นี้ถูกใช้งานแล้ว กรุณาเลือกชื่อผู้ใช้อื่น')
+                elif existing[1] == email:
+                    return render_template('signup.html', error='อีเมลนี้ถูกใช้งานแล้ว กรุณาใช้อีเมลอื่น')
+                elif existing[2] == full_name:
+                    return render_template('signup.html', error='ชื่อ-นามสกุลนี้มีอยู่ในระบบแล้ว กรุณาตรวจสอบว่าคุณเคยสมัครไว้หรือไม่')
 
             # ใช้ parameterized query (ปลอดภัย)
             cur.execute(
@@ -139,28 +142,57 @@ def dashboard():
     """หน้า Dashboard - ต้อง login ก่อน"""
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     conn = get_db_connection()
     cur = conn.cursor()
-    
+
+    user_id = session['user_id']
+
     # ดึงข้อมูล user
-    cur.execute("SELECT username, email, full_name, role FROM users WHERE id = %s", (session['user_id'],))
+    cur.execute("SELECT username, email, full_name, role, created_at FROM users WHERE id = %s", (user_id,))
     user = cur.fetchone()
-    
+
     # ดึงข้อมูลจังหวัดยอดนิยม
     cur.execute("SELECT id, name_th, slug, hotel_count FROM provinces WHERE is_popular = TRUE ORDER BY hotel_count DESC")
     popular_provinces = cur.fetchall()
-    
+
+    # ดึงสถิติการจองจริงของผู้ใช้
+    cur.execute("SELECT COUNT(*) FROM bookings WHERE user_id = %s", (user_id,))
+    total_bookings = cur.fetchone()[0]
+
+    cur.execute("SELECT COUNT(*) FROM bookings WHERE user_id = %s AND check_in_date > CURRENT_DATE AND status != 'cancelled'", (user_id,))
+    upcoming_bookings = cur.fetchone()[0]
+
+    cur.execute("SELECT COUNT(*) FROM reviews WHERE user_id = %s", (user_id,))
+    total_reviews = cur.fetchone()[0]
+
+    # ดึงการจองล่าสุดจริงของผู้ใช้
+    cur.execute("""
+        SELECT b.id, h.name, b.check_in_date, b.check_out_date,
+               b.num_guests, b.total_price, b.status
+        FROM bookings b
+        JOIN hotels h ON b.hotel_id = h.id
+        WHERE b.user_id = %s
+        ORDER BY b.created_at DESC
+        LIMIT 5
+    """, (user_id,))
+    recent_bookings = cur.fetchall()
+
     cur.close()
     conn.close()
-    
-    return render_template('dashboard.html', 
-                          username=user[0], 
-                          email=user[1], 
-                          full_name=user[2], 
+
+    return render_template('dashboard.html',
+                          username=user[0],
+                          email=user[1],
+                          full_name=user[2],
                           role=user[3],
+                          created_at=user[4],
                           session_token=session.get('session_token', 'N/A'),
-                          popular_provinces=popular_provinces)
+                          popular_provinces=popular_provinces,
+                          total_bookings=total_bookings,
+                          upcoming_bookings=upcoming_bookings,
+                          total_reviews=total_reviews,
+                          recent_bookings=recent_bookings)
 
 @app.route('/search', methods=['GET', 'POST'])
 def search():
@@ -391,37 +423,45 @@ def profile():
     """หน้าโปรไฟล์ - แสดงข้อมูลส่วนตัว"""
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
+    user_id = session['user_id']
     conn = get_db_connection()
     cur = conn.cursor()
-    
+
     # ดึงข้อมูลโปรไฟล์
     cur.execute("""
-        SELECT u.username, u.email, u.full_name, u.role, 
+        SELECT u.username, u.email, u.full_name, u.role,
                p.phone, p.address, p.credit_card, p.secret_note
         FROM users u
         LEFT JOIN user_profiles p ON u.id = p.user_id
         WHERE u.id = %s
-    """, (session['user_id'],))
-    
+    """, (user_id,))
+
     profile = cur.fetchone()
-    
+
     # ดึงการจองของผู้ใช้
     cur.execute("""
-        SELECT b.id, h.name, b.check_in_date, b.check_out_date, 
+        SELECT b.id, h.name, b.check_in_date, b.check_out_date,
                b.total_price, b.status, b.created_at
         FROM bookings b
         JOIN hotels h ON b.hotel_id = h.id
         WHERE b.user_id = %s
         ORDER BY b.created_at DESC
         LIMIT 10
-    """, (session['user_id'],))
-    
+    """, (user_id,))
+
     bookings = cur.fetchall()
-    
+
+    # ดึงสถิติจริงของผู้ใช้
+    cur.execute("SELECT COUNT(*) FROM bookings WHERE user_id = %s", (user_id,))
+    total_bookings = cur.fetchone()[0]
+
+    cur.execute("SELECT COUNT(*) FROM reviews WHERE user_id = %s", (user_id,))
+    total_reviews = cur.fetchone()[0]
+
     cur.close()
     conn.close()
-    
+
     if profile:
         profile_data = {
             'username': profile[0],
@@ -435,8 +475,9 @@ def profile():
         }
     else:
         profile_data = None
-    
-    return render_template('profile.html', profile=profile_data, bookings=bookings)
+
+    return render_template('profile.html', profile=profile_data, bookings=bookings,
+                          total_bookings=total_bookings, total_reviews=total_reviews)
 
 @app.route('/admin')
 def admin():

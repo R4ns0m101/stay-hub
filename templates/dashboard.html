@@ -229,40 +229,31 @@
 
 <div class="row mb-4">
     <!-- Statistics Cards -->
-    <div class="col-md-3 mb-3">
+    <div class="col-md-4 mb-3">
         <div class="stat-card">
             <div class="stat-icon primary">
                 <i class="fas fa-calendar-check"></i>
             </div>
-            <div class="stat-value">3</div>
+            <div class="stat-value">{{ total_bookings }}</div>
             <div class="stat-label">การจองทั้งหมด</div>
         </div>
     </div>
-    <div class="col-md-3 mb-3">
+    <div class="col-md-4 mb-3">
         <div class="stat-card">
             <div class="stat-icon success">
                 <i class="fas fa-clock"></i>
             </div>
-            <div class="stat-value">1</div>
+            <div class="stat-value">{{ upcoming_bookings }}</div>
             <div class="stat-label">การจองที่กำลังจะมาถึง</div>
         </div>
     </div>
-    <div class="col-md-3 mb-3">
+    <div class="col-md-4 mb-3">
         <div class="stat-card">
             <div class="stat-icon warning">
                 <i class="fas fa-star"></i>
             </div>
-            <div class="stat-value">{{ 1250 if role == 'admin' else 850 }}</div>
-            <div class="stat-label">แต้มสะสม</div>
-        </div>
-    </div>
-    <div class="col-md-3 mb-3">
-        <div class="stat-card">
-            <div class="stat-icon danger">
-                <i class="fas fa-heart"></i>
-            </div>
-            <div class="stat-value">5</div>
-            <div class="stat-label">โรงแรมที่ชื่นชอบ</div>
+            <div class="stat-value">{{ total_reviews }}</div>
+            <div class="stat-label">รีวิวของฉัน</div>
         </div>
     </div>
 </div>
@@ -306,7 +297,7 @@
                     </tr>
                     <tr>
                         <td><i class="fas fa-calendar me-2"></i>สมาชิกตั้งแต่</td>
-                        <td>มกราคม 2026</td>
+                        <td>{{ created_at.strftime('%d/%m/%Y') if created_at else 'N/A' }}</td>
                     </tr>
                 </table>
 
@@ -409,9 +400,10 @@
             <i class="fas fa-history"></i>
             การจองล่าสุด
         </h3>
-        
+
         <div class="card">
             <div class="card-body">
+                {% if recent_bookings %}
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead style="background-color: var(--bg-light);">
@@ -426,63 +418,53 @@
                             </tr>
                         </thead>
                         <tbody>
+                            {% for booking in recent_bookings %}
                             <tr>
-                                <td><strong>BK001234</strong></td>
+                                <td><strong>#{{ booking[0] }}</strong></td>
                                 <td>
                                     <i class="fas fa-hotel me-1" style="color: var(--secondary-color);"></i>
-                                    Grand Palace Hotel
+                                    {{ booking[1] }}
                                 </td>
-                                <td>15 ก.พ. 2026</td>
-                                <td>18 ก.พ. 2026</td>
-                                <td>2 ท่าน</td>
-                                <td><strong>฿10,500</strong></td>
+                                <td>{{ booking[2].strftime('%d/%m/%Y') }}</td>
+                                <td>{{ booking[3].strftime('%d/%m/%Y') }}</td>
+                                <td>{{ booking[4] }} ท่าน</td>
+                                <td><strong>฿{{ "{:,.0f}".format(booking[5]) }}</strong></td>
                                 <td>
-                                    <span class="badge bg-success">
-                                        <i class="fas fa-check-circle me-1"></i>ยืนยันแล้ว
-                                    </span>
+                                    {% if booking[6] == 'confirmed' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle me-1"></i>ยืนยันแล้ว
+                                        </span>
+                                    {% elif booking[6] == 'pending' %}
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="fas fa-clock me-1"></i>รอการยืนยัน
+                                        </span>
+                                    {% elif booking[6] == 'cancelled' %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-times-circle me-1"></i>ยกเลิก
+                                        </span>
+                                    {% endif %}
                                 </td>
                             </tr>
-                            <tr>
-                                <td><strong>BK001235</strong></td>
-                                <td>
-                                    <i class="fas fa-hotel me-1" style="color: var(--secondary-color);"></i>
-                                    Beachside Resort
-                                </td>
-                                <td>1 มี.ค. 2026</td>
-                                <td>5 มี.ค. 2026</td>
-                                <td>4 ท่าน</td>
-                                <td><strong>฿11,200</strong></td>
-                                <td>
-                                    <span class="badge bg-success">
-                                        <i class="fas fa-check-circle me-1"></i>ยืนยันแล้ว
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>BK001236</strong></td>
-                                <td>
-                                    <i class="fas fa-hotel me-1" style="color: var(--secondary-color);"></i>
-                                    Mountain View Lodge
-                                </td>
-                                <td>20 ก.พ. 2026</td>
-                                <td>22 ก.พ. 2026</td>
-                                <td>1 ท่าน</td>
-                                <td><strong>฿3,000</strong></td>
-                                <td>
-                                    <span class="badge bg-secondary">
-                                        <i class="fas fa-times-circle me-1"></i>ยกเลิก
-                                    </span>
-                                </td>
-                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
-                
+
                 <div class="text-center mt-3">
                     <a href="{{ url_for('profile') }}" class="btn btn-outline-primary">
                         <i class="fas fa-list me-2"></i>ดูการจองทั้งหมด
                     </a>
                 </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-suitcase-rolling" style="font-size: 3rem; color: var(--border-color); margin-bottom: 1rem;"></i>
+                    <h5 style="color: var(--text-dark);">ยังไม่มีการจอง</h5>
+                    <p style="color: var(--text-light);">เริ่มต้นค้นหาและจองโรงแรมในฝันของคุณได้เลย!</p>
+                    <a href="{{ url_for('provinces') }}" class="btn btn-primary mt-2">
+                        <i class="fas fa-search me-2"></i>ค้นหาโรงแรม
+                    </a>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

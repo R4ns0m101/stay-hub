@@ -405,43 +405,81 @@
     <div class="col-12">
         <div class="info-card">
             <div class="info-card-title">
-                <i class="fas fa-star"></i>
-                สมาชิกภาพและสิทธิพิเศษ
+                <i class="fas fa-chart-bar"></i>
+                สถิติของฉัน
             </div>
-            
+
             <div class="row text-center">
-                <div class="col-md-3 mb-3">
+                <div class="col-md-6 mb-3">
                     <div style="background-color: var(--bg-light); padding: 1.5rem; border-radius: 10px;">
                         <i class="fas fa-calendar-check" style="font-size: 2rem; color: var(--primary-color); margin-bottom: 0.8rem;"></i>
-                        <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-dark);">3</div>
+                        <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-dark);">{{ total_bookings }}</div>
                         <div style="font-size: 0.9rem; color: var(--text-light);">การจองทั้งหมด</div>
                     </div>
                 </div>
-                <div class="col-md-3 mb-3">
+                <div class="col-md-6 mb-3">
                     <div style="background-color: var(--bg-light); padding: 1.5rem; border-radius: 10px;">
                         <i class="fas fa-star" style="font-size: 2rem; color: var(--secondary-color); margin-bottom: 0.8rem;"></i>
-                        <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-dark);">1,250</div>
-                        <div style="font-size: 0.9rem; color: var(--text-light);">แต้มสะสม</div>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <div style="background-color: var(--bg-light); padding: 1.5rem; border-radius: 10px;">
-                        <i class="fas fa-heart" style="font-size: 2rem; color: var(--danger-color); margin-bottom: 0.8rem;"></i>
-                        <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-dark);">5</div>
-                        <div style="font-size: 0.9rem; color: var(--text-light);">โรงแรมที่ชื่นชอบ</div>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <div style="background-color: var(--bg-light); padding: 1.5rem; border-radius: 10px;">
-                        <i class="fas fa-trophy" style="font-size: 2rem; color: var(--success-color); margin-bottom: 0.8rem;"></i>
-                        <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-dark);">Silver</div>
-                        <div style="font-size: 0.9rem; color: var(--text-light);">ระดับสมาชิก</div>
+                        <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-dark);">{{ total_reviews }}</div>
+                        <div style="font-size: 0.9rem; color: var(--text-light);">รีวิวของฉัน</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Booking History -->
+{% if bookings %}
+<div class="row">
+    <div class="col-12">
+        <div class="info-card">
+            <div class="info-card-title">
+                <i class="fas fa-history"></i>
+                ประวัติการจอง
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead style="background-color: var(--bg-light);">
+                        <tr>
+                            <th>รหัส</th>
+                            <th>โรงแรม</th>
+                            <th>เช็คอิน</th>
+                            <th>เช็คเอาท์</th>
+                            <th>ราคา</th>
+                            <th>สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                        <tr>
+                            <td><strong>#{{ booking[0] }}</strong></td>
+                            <td>
+                                <i class="fas fa-hotel me-1" style="color: var(--secondary-color);"></i>
+                                {{ booking[1] }}
+                            </td>
+                            <td>{{ booking[2].strftime('%d/%m/%Y') }}</td>
+                            <td>{{ booking[3].strftime('%d/%m/%Y') }}</td>
+                            <td><strong>฿{{ "{:,.0f}".format(booking[4]) }}</strong></td>
+                            <td>
+                                {% if booking[5] == 'confirmed' %}
+                                    <span class="badge bg-success">ยืนยันแล้ว</span>
+                                {% elif booking[5] == 'pending' %}
+                                    <span class="badge bg-warning text-dark">รอการยืนยัน</span>
+                                {% elif booking[5] == 'cancelled' %}
+                                    <span class="badge bg-secondary">ยกเลิก</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <div class="security-notice">
     <strong>
