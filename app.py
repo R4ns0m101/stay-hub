@@ -80,38 +80,57 @@ def login():
 def signup():
     """หน้า Sign Up - ปกติไม่มีช่องโหว่"""
     if request.method == 'POST':
-        username = request.form.get('username', '')
+        username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
-        email = request.form.get('email', '')
-        full_name = request.form.get('full_name', '')
-        
+        email = request.form.get('email', '').strip()
+        full_name = request.form.get('full_name', '').strip()
+
+        # ตรวจสอบข้อมูลว่าไม่ว่างเปล่า
+        if not username or not password or not email or not full_name:
+            return render_template('signup.html', error='กรุณากรอกข้อมูลให้ครบทุกช่อง')
+
         conn = get_db_connection()
         cur = conn.cursor()
-        
+
         try:
+            # ตรวจสอบว่า username ซ้ำหรือไม่
+            cur.execute("SELECT id FROM users WHERE username = %s", (username,))
+            if cur.fetchone():
+                cur.close()
+                conn.close()
+                return render_template('signup.html', error='ชื่อผู้ใช้นี้ถูกใช้งานแล้ว กรุณาเลือกชื่อผู้ใช้อื่น')
+
+            # ตรวจสอบว่า email ซ้ำหรือไม่
+            cur.execute("SELECT id FROM users WHERE email = %s", (email,))
+            if cur.fetchone():
+                cur.close()
+                conn.close()
+                return render_template('signup.html', error='อีเมลนี้ถูกใช้งานแล้ว กรุณาใช้อีเมลอื่น')
+
             # ใช้ parameterized query (ปลอดภัย)
             cur.execute(
                 "INSERT INTO users (username, password, email, full_name, role) VALUES (%s, %s, %s, %s, 'user') RETURNING id",
                 (username, password, email, full_name)
             )
             user_id = cur.fetchone()[0]
-            
+
             # สร้าง user profile ว่าง
             cur.execute(
                 "INSERT INTO user_profiles (user_id, phone, address) VALUES (%s, '', '')",
                 (user_id,)
             )
-            
+
             conn.commit()
             cur.close()
             conn.close()
-            
+
             # ไม่ auto-login หลัง signup เพื่อป้องกันปัญหา session persistence
             return redirect(url_for('login'))
         except Exception as e:
+            conn.rollback()
             cur.close()
             conn.close()
-            return render_template('signup.html', error=f'Error: {str(e)}')
+            return render_template('signup.html', error='เกิดข้อผิดพลาดในการสมัครสมาชิก กรุณาลองใหม่อีกครั้ง')
     
     return render_template('signup.html')
 
@@ -337,7 +356,9 @@ def book_hotel(hotel_id):
     if not hotel:
         return "Hotel not found", 404
     
-    return render_template('book_hotel.html', hotel=hotel)
+    return render_template('book_hotel.html', hotel=hotel,
+                           min_check_in=(datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d'),
+                           min_check_out=(datetime.now() + timedelta(days=2)).strftime('%Y-%m-%d'))
 
 @app.route('/booking-success/<int:booking_id>')
 def booking_success(booking_id):

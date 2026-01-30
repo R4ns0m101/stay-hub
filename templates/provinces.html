@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}จังหวัดท่องเที่ยว - StayHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .provinces-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        color: #ffffff;
+        border-radius: 16px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .provinces-header h2 {
+        font-size: 2.2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .province-card {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        margin-bottom: 1.5rem;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .province-card:hover {
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        transform: translateY(-4px);
+        color: inherit;
+    }
+
+    .province-image {
+        width: 100%;
+        height: 200px;
+        background: linear-gradient(135deg, #e2e8f0, #cbd5e0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3.5rem;
+        color: #a0aec0;
+    }
+
+    .province-body {
+        padding: 1.5rem;
+    }
+
+    .province-name {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.3rem;
+    }
+
+    .province-name-en {
+        font-size: 0.95rem;
+        color: var(--text-light);
+        margin-bottom: 0.8rem;
+    }
+
+    .province-description {
+        color: var(--text-light);
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+        line-height: 1.6;
+    }
+
+    .province-stats {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .hotel-count {
+        font-weight: 600;
+        color: var(--primary-color);
+        font-size: 0.95rem;
+    }
+
+    .btn-view {
+        background: linear-gradient(135deg, var(--secondary-color), #f6e05e);
+        border: none;
+        color: var(--text-dark);
+        padding: 0.5rem 1.2rem;
+        font-weight: 600;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-view:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="provinces-header">
+    <h2>
+        <i class="fas fa-map-marked-alt me-2"></i>
+        จังหวัดท่องเที่ยวยอดนิยม
+    </h2>
+    <p style="font-size: 1.05rem; margin: 0;">
+        เลือกจุดหมายปลายทางของคุณจากจังหวัดท่องเที่ยวชั้นนำทั่วประเทศไทย
+    </p>
+</div>
+
+<div class="row">
+    {% for province in provinces %}
+    <div class="col-md-6 col-lg-4">
+        <a href="{{ url_for('province_detail', slug=province[3]) }}" class="province-card">
+            <div class="province-image">
+                <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <div class="province-body">
+                <div class="province-name">{{ province[0] }}</div>
+                <div class="province-name-en">{{ province[1] }}</div>
+                <div class="province-description">
+                    {{ province[4][:120] }}{% if province[4]|length > 120 %}...{% endif %}
+                </div>
+                <div class="province-stats">
+                    <span class="hotel-count">
+                        <i class="fas fa-hotel me-1"></i>{{ province[5] }} โรงแรม
+                    </span>
+                    <span class="btn-view">
+                        <i class="fas fa-arrow-right me-1"></i>ดูโรงแรม
+                    </span>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="text-center mt-3">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+        <i class="fas fa-arrow-left me-2"></i>กลับหน้าหลัก
+    </a>
+</div>
+{% endblock %}

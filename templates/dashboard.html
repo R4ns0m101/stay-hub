@@ -374,6 +374,34 @@
     </div>
 </div>
 
+<!-- Popular Provinces -->
+{% if popular_provinces %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h3 class="section-title">
+            <i class="fas fa-map-marked-alt"></i>
+            จังหวัดยอดนิยม
+        </h3>
+        <div class="row">
+            {% for province in popular_provinces %}
+            <div class="col-md-3 mb-3">
+                <a href="{{ url_for('province_detail', slug=province[2]) }}" class="quick-action-btn" style="text-decoration: none;">
+                    <i class="fas fa-map-marker-alt quick-action-icon" style="color: var(--secondary-color);"></i>
+                    <div class="quick-action-title">{{ province[1] }}</div>
+                    <p class="quick-action-desc">{{ province[3] }} โรงแรม</p>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-2">
+            <a href="{{ url_for('provinces') }}" class="btn btn-outline-primary">
+                <i class="fas fa-globe me-2"></i>ดูจังหวัดทั้งหมด
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- Recent Bookings -->
 <div class="row">
     <div class="col-12">
@@ -451,7 +479,7 @@
                 </div>
                 
                 <div class="text-center mt-3">
-                    <a href="#" class="btn btn-outline-primary">
+                    <a href="{{ url_for('profile') }}" class="btn btn-outline-primary">
                         <i class="fas fa-list me-2"></i>ดูการจองทั้งหมด
                     </a>
                 </div>
